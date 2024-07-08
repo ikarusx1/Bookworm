@@ -1,1 +1,9 @@
-Bookworm is a Flask-based web server designed to manage a collection of books effectively. Harnessing the power of SQLAlchemy, it connects seamlessly to a PostgreSQL database, allowing for sophisticated data manipulation and retrieval. The server is equipped with JSON parsing middleware to handle data exchanges smoothly and defines various routes for comprehensive book management. Set to listen on port 5000, Bookworm provides a robust platform for adding, modifying, and querying book data through a clean and intuitive API.
+# Bookworm
+
+**Purpose:** Bookworm is a web application designed for managing a personal library. It allows users to add books to their library, mark books as read, leave reviews, and receive recommendations based on their reading history.
+
+## Features
+- **Add Books:** Users can add new books to their library.
+- **Manage Books:** Users can update and delete their books.
+- **Track Reading:** Users can mark books as read and leave reviews.
+- **Get Recommendations:** Users can receive book recommendations based on their reading history.
