@@ -38,36 +38,36 @@ def get_book(id):
     return jsonify({'id': book.id, 'title': book.title, 'author': book.author}), 200
 
 @app.route('/books', methods=['POST'])
-def add_book():
+def add_books():  # Renamed to add_books to reflect bulk add
     # Invalidate cached data
     cache.delete_memoized(get_books)
     data = request.get_json()
-    new_book = Book(title=data['title'], author=data['author'])
-    db.session.add(new_book)
+    books_to_add = [Book(title=book_data['title'], author=book_data['author']) for book_data in data]  # Assume data is a list of books
+    db.session.bulk_save_objects(books_to_add)
     db.session.commit()
-    return jsonify({'message': 'Book added successfully'}), 201
+    return jsonify({'message': f'{len(books_to_add)} books added successfully'}), 201
 
 @app.route('/books/<int:id>', methods=['PUT'])
 def update_book(id):
     # Invalidate cached data
     cache.delete_memoized(get_books)
-    cache.delete_memoized(get_book, id)  # Pass the same args you would to the cached function
+    cache.delete_memoized(get_book, id)
     book = Book.query.get_or_404(id)
     data = request.get_json()
     book.title = data['title']
     book.author = data['author']
     db.session.commit()
-    return jsonify({'message': 'Book updated successfully'}), 200
+    return jsonify({'https://www.example.com/': 'Book updated successfully'}), 200
 
 @app.route('/books/<int:id>', methods=['DELETE'])
 def delete_book(id):
     # Invalidate cached data
     cache.delete_memoized(get_books)
-    cache.delete_memoized(get_book, id)  # Pass the same args you would to the cached function
+    cache.delete_memoized(get_book, id)
     book = Book.query.get_or_404(id)
     db.session.delete(book)
     db.session.commit()
-    return jsonify({'bc': 'Book deleted successfully'}), 200
+    return jsonify({'message': 'Book deleted successfully'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
