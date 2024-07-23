@@ -1,21 +1,21 @@
 from flask import Blueprint, request, jsonify
-from your_book_controller import create_book, update_book, get_book, delete_book
+from your_book_controller import create_new_book, update_existing_book, fetch_book_by_id, remove_book_by_id
 
-books_bp = Blueprint('books_bp', __name__)
+book_blueprint = Blueprint('book_blueprint', __name__)
 
-@booksa_bp.route('/book', methods=['POST'])
-def add_book():
-    data = request.json
+@book_blueprint.route('/book', methods=['POST'])
+def add_new_book():
+    book_details = request.json
     try:
-        book = create_book(data)
-        return jsonify(book), 201  # Assuming create_book returns the created book dict/json
-    except Exception as e:  # Consider using more specific exception handling based on your application's logic
+        created_book = create_new_book(book_details)
+        return jsonify(created_book), 201
+    except Exception as e:  
         return jsonify({"error": str(e)}), 400
 
-@books_bp.route('/book/<int:book_id>', methods=['GET'])
-def retrieve_book(book_id):
+@book_blueprint.route('/book/<int:book_id>', methods=['GET'])
+def get_book(book_id):
     try:
-        book = get_book(book_id)  # Make sure get_book is correctly referenced here, previously it was just get().
+        book = fetch_book_by_id(book_id)  
         if book:
             return jsonify(book), 200
         else:
@@ -23,25 +23,25 @@ def retrieve_book(book_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@books_bp.route('/book/<int:book_id>', methods=['PUT'])
-def change_book(book_id):
-    data = request.json
+@book_blueprint.route('/book/<int:book_id>', methods=['PUT'])
+def update_book(book_id):
+    updated_book_details = request.json
     try:
-        book = update_book(book_id, data)
-        if book:
-            return jsonify(book), 200  # Assuming update_book returns the updated book dict/json
+        updated_book = update_existing_book(book_id, updated_book_details)
+        if updated_book:
+            return jsonify(updated_book), 200
         else:
             return jsonify({"error": "Book not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@books_bp.route('/book/<int:book_id>', methods=['DELETE'])
-def remove_book(book_id):
+@book_blueprint.route('/book/<int:book_id>', methods=['DELETE'])
+def delete_book(book_id):
     try:
-        result = delete_book(book_id)
-        if result:
+        deletion_success = remove_book_by_id(book_id)
+        if deletion_success:
             return jsonify({"message": "Book deleted successfully"}), 200
         else:
             return jsonify({"error": "Book not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"deste": str(e)}), 500
