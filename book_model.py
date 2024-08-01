@@ -24,12 +24,28 @@ Base.metadata.create_all(engine)
 
 Session = sessionmaker(bind=engine)
 
-if __name__ == "__main__":
-    session = Session()
-    new_book = Book(title="Example Title", author="Example Author", genre="Fiction", review=4.5)
-    session.add(new_book)
+def add_books_in_batch(session, books_data):
+    """
+    Adds multiple Book records to the database in a single transaction.
+
+    :param session: The session object for database interaction
+    :param books_data: A list of dictionaries, where each dictionary represents a book's data
+    """
+    books = [Book(**data) for data in books_data]
+    session.add_all(books)
     session.commit()
 
+if __name__ == "__main__":
+    session = Session()
+    
+    books_data = [
+        {"title": "Example Title 1", "author": "Example Author 1", "genre": "Fiction", "review": 4.5},
+        {"title": "Example Title 2", "author": "Example Author 2", "genre": "Non-Fiction", "review": 4.2}
+    ]
+
+    add_books_in_batch(session, books_data)
+
+    # Fetch and print all books in the database
     books = session.query(Book).all()
     for book in books:
         print(f"{book.title}, {book.author}, {book.genre}, {book.review}")
