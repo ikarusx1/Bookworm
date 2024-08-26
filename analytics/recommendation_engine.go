@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"os"
+	"sort"
 )
 
 type Product struct {
@@ -22,19 +23,19 @@ func LoadEnvironmentVariables() {
 func FetchProducts(apiURL string) ([]Product, error) {
 	resp, err := http.Get(apiURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching products: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
 	var products []Product
 	err = json.Unmarshal(body, &products)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshaling json: %w", err)
 	}
 
 	return products, nil
@@ -50,13 +51,9 @@ func CalculateRecommendationScores(products []Product) []Product {
 func RecommendProducts(products []Product, topN int) []Product {
 	CalculateRecommendationScores(products)
 
-	for i := 0; i < len(products); i++ {
-		for j := 0; j < len(products)-i-1; j++ {
-			if products[j].Score < products[j+1].Score {
-				products[j], products[j+1] = products[j+1], products[j]
-			}
-		}
-	}
+	sort.Slice(products, func(i, j int) bool {
+		return products[i].Score > products[j].Score
+	})
 
 	if topN > len(products) {
 		topN = len(products)
