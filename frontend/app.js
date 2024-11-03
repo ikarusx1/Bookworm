@@ -1,8 +1,8 @@
 const BASE_URL = 'http://your-api-url.com/api/books';
 
-async function fetchBooks() {
+async function fetchBooks(filterText = '') {
   try {
-    const response = await fetch(BASE_URL);
+    const response = await fetch(`${BASE_URL}?filter=${filterText}`);
     if (!response.ok) throw new Error('Failed to fetch books');
     const books = await response.json();
     displayBooks(books);
@@ -13,7 +13,19 @@ async function fetchBooks() {
 
 function displayBooks(books) {
   const booksContainer = document.getElementById('booksContainer');
+  const sortType = document.getElementById('sortBooks').value;
   booksContainer.innerHTML = '';
+
+  if(sortType !== 'none') {
+    books.sort((a,b) => {
+      if(sortType === 'title') {
+        return a.title.localeCompare(b.title);
+      } else if(sortType === 'author') {
+        return a.author.localeCompare(b.author);
+      }
+    });
+  }
+
   books.forEach(book => {
     const bookElement = document.createElement('div');
     bookElement.innerHTML = `
@@ -79,4 +91,15 @@ document.getElementById('createBookForm').addEventListener('submit', event => {
   createBook(bookData);
 });
 
-document.addEventListener('DOMContentLoaded', fetchBooks);
+document.getElementById('filterBooks').addEventListener('input', event => {
+  const filterText = event.target.value;
+  fetchBooks(filterText);
+});
+
+document.getElementById('sortBooks').addEventListener('change', () => {
+  fetchBooks(document.getElementById('filterBooks').value);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  fetchBooks();
+});
