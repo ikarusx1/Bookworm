@@ -2,7 +2,7 @@ const BASE_URL = 'http://your-api-url.com/api/books';
 
 async function fetchBooks(filterText = '') {
   try {
-    const response = await fetch(`${BASE_URL}?filter=${filterText}`);
+    const response = await fetch(`${BASE_URL}?filter=${encodeURIComponent(filterText)}`);
     if (!response.ok) throw new Error('Failed to fetch books');
     const books = await response.json();
     displayBooks(books);
@@ -16,14 +16,13 @@ function displayBooks(books) {
   const sortType = document.getElementById('sortBooks').value;
   booksContainer.innerHTML = '';
 
-  if(sortType !== 'none') {
-    books.sort((a,b) => {
-      if(sortType === 'title') {
-        return a.title.localeCompare(b.title);
-      } else if(sortType === 'author') {
-        return a.author.localeCompare(b.author);
-      }
-    });
+  const sorter = {
+    'title': (a, b) => a.title.localeCompare(b.title),
+    'author': (a, b) => a.author.localeCompare(b.author)
+  };
+
+  if(sortType !== 'none' && sorter[sortType]) {
+    books.sort(sorter[sortType]);
   }
 
   books.forEach(book => {
@@ -32,7 +31,7 @@ function displayBooks(books) {
       <h3>${book.title}</h3>
       <p>${book.author}</p>
       <button onclick="deleteBook('${book.id}')">Delete</button>
-      <button onclick="editBook('${book.id}')">Edit</button>
+      <button onclick="editBook('${book.id}', '${book.title}', '${book.author}')">Edit</button>
     `;
     booksContainer.appendChild(bookElement);
   });
@@ -48,7 +47,7 @@ async function createBook(bookData) {
       body: JSON.stringify(bookData),
     });
     if (!response.ok) throw new Error('Failed to create book');
-    fetchBooks();
+    await fetchBooks();
   } catch (error) {
     console.error('Error creating book:', error);
   }
@@ -60,7 +59,7 @@ async function deleteBook(bookId) {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete book');
-    fetchBooks();
+    await fetchBooks();
   } catch (error) {
     console.error('Error deleting book:', error);
   }
@@ -76,7 +75,7 @@ async function updateBook(bookId, newBookData) {
       body: JSON.stringify(newBookData),
     });
     if (!response.ok) throw new Error('Failed to update book');
-    fetchBooks();
+    await fetchBooks();
   } catch (error) {
     console.error('Error updating book:', error);
   }
@@ -84,17 +83,17 @@ async function updateBook(bookId, newBookData) {
 
 document.getElementById('createBookForm').addEventListener('submit', event => {
   event.preventDefault();
+  const formData = new FormData(event.target);
   const bookData = {
-    title: event.target.title.value,
-    author: event.target.author.value,
+    title: formData.get('title'),
+    author: formData.get('author'),
   };
   createBook(bookData);
 });
 
-document.getElementById('filterBooks').addEventListener('input', event => {
-  const filterText = event.target.value;
-  fetchBooks(filterText);
-});
+document.getElementById('filterBooks').addEventListener('input', debounceEvent(() => {
+  fetchBooks(document.getElementById('filterBooks').value);
+}, 250));
 
 document.getElementById('sortBooks').addEventListener('change', () => {
   fetchBooks(document.getElementById('filterBooks').value);
@@ -103,3 +102,13 @@ document.getElementById('sortBooks').addEventListener('change', () => {
 document.addEventListener('DOMContentLoaded', () => {
   fetchBooks();
 });
+
+function debounceEvent(callback, delay = 1000) {
+  let timerId;
+  return (...args) => {
+    clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      callback.apply(this, args);
+    }, delay);
+  };
+}
